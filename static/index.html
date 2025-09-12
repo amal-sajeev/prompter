@@ -1,0 +1,672 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>✨ LLM Prompt Optimizer</title>
+
+<!-- Google Font -->
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+:root {
+  --blue-dark: #0c2d48;
+  --blue-medium: #2d68c4;
+  --blue-light: #74b9ff;
+  --blue-pale: #d6e6ff;
+  --gold: #ffd700;
+  --gold-light: #ffef9f;
+  --white: #ffffff;
+  --glass-light: rgba(255, 255, 255, 0.25);
+  --glass-dark: rgba(0, 0, 0, 0.1);
+  font-family: 'Poppins', sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+/* Background with gradient + animated elements */
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: linear-gradient(135deg, var(--blue-dark) 0%, var(--blue-medium) 50%, var(--blue-light) 100%);
+  color: var(--white);
+  overflow-x: hidden;
+  position: relative;
+}
+
+/* Animated floating bubbles */
+.bubble {
+  position: absolute;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.15);
+  box-shadow: 0 0 20px rgba(255, 255, 255, 0.2);
+  animation: float 15s infinite ease-in-out;
+  z-index: 0;
+}
+
+.bubble:nth-child(1) {
+  width: 80px;
+  height: 80px;
+  top: 10%;
+  left: 10%;
+  animation-delay: 0s;
+}
+
+.bubble:nth-child(2) {
+  width: 120px;
+  height: 120px;
+  top: 20%;
+  right: 10%;
+  animation-delay: -2s;
+}
+
+.bubble:nth-child(3) {
+  width: 60px;
+  height: 60px;
+  bottom: 20%;
+  left: 20%;
+  animation-delay: -4s;
+}
+
+.bubble:nth-child(4) {
+  width: 100px;
+  height: 100px;
+  bottom: 10%;
+  right: 15%;
+  animation-delay: -6s;
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0) translateX(0);
+  }
+  25% {
+    transform: translateY(-20px) translateX(10px);
+  }
+  50% {
+    transform: translateY(-40px) translateX(-10px);
+  }
+  75% {
+    transform: translateY(-20px) translateX(-15px);
+  }
+}
+
+/* Glowing orbs */
+.orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(40px);
+  opacity: 0.3;
+  z-index: 0;
+}
+
+.orb:nth-child(1) {
+  width: 300px;
+  height: 300px;
+  background: var(--gold);
+  top: -100px;
+  left: -100px;
+}
+
+.orb:nth-child(2) {
+  width: 200px;
+  height: 200px;
+  background: var(--blue-light);
+  bottom: -50px;
+  right: -50px;
+}
+
+/* Hero section */
+header {
+  text-align: center;
+  padding: 70px 20px 40px;
+  color: white;
+  position: relative;
+  z-index: 2;
+}
+
+header h1 {
+  font-size: 3.5rem;
+  margin: 0;
+  font-weight: 700;
+  text-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
+  background: linear-gradient(90deg, var(--white), var(--gold-light));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin-bottom: 15px;
+}
+
+header p {
+  font-size: 1.25rem;
+  margin-top: 14px;
+  opacity: 0.9;
+  font-weight: 300;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+/* Main container */
+main {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 20px;
+  position: relative;
+  z-index: 2;
+}
+
+/* Glass card with Frutiger Aero style */
+.card {
+  backdrop-filter: blur(16px);
+  background: linear-gradient(135deg, var(--glass-light) 0%, var(--glass-dark) 100%);
+  border-radius: 24px;
+  padding: 35px;
+  box-shadow: 
+    0 10px 30px rgba(0, 0, 0, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2),
+    inset 0 -5px 20px rgba(0, 0, 0, 0.1);
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  position: relative;
+  overflow: hidden;
+}
+
+.card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 5px;
+  background: linear-gradient(90deg, var(--blue-light), var(--gold));
+  border-radius: 24px 24px 0 0;
+}
+
+/* Input row */
+.input-row {
+  display: flex;
+  gap: 15px;
+  flex-wrap: wrap;
+  margin-bottom: 25px;
+}
+
+.input-container {
+  flex: 1;
+  min-width: 250px;
+  position: relative;
+}
+
+.input-container label {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 0.9rem;
+  color: var(--blue-pale);
+  font-weight: 500;
+}
+
+input, select, textarea {
+  padding: 16px 18px;
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  font-size: 16px;
+  background: rgba(0, 0, 0, 0.2);
+  color: white;
+  width: 100%;
+  transition: all 0.3s ease;
+  box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+input:focus, select:focus, textarea:focus {
+  border-color: var(--gold);
+  outline: none;
+  box-shadow: 
+    0 0 15px rgba(251, 191, 36, 0.4),
+    inset 0 2px 5px rgba(0, 0, 0, 0.1);
+  background: rgba(0, 0, 0, 0.25);
+}
+
+select {
+  appearance: none;
+  background: rgba(0, 0, 0, 0.2) url('data:image/svg+xml,<svg fill="white" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20"><path d="M5 7l5 5 5-5H5z"/></svg>') no-repeat right 16px center;
+  background-size: 14px;
+}
+
+textarea {
+  width: 100%;
+  min-height: 150px;
+  resize: vertical;
+}
+
+/* Button */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 15px;
+  background: linear-gradient(90deg, var(--gold), #ffef7a);
+  color: var(--blue-dark);
+  border: none;
+  padding: 16px 32px;
+  font-size: 18px;
+  border-radius: 50px;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 
+    0 5px 15px rgba(251, 191, 36, 0.4),
+    0 10px 30px rgba(251, 191, 36, 0.3);
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.btn::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+  transition: all 0.6s ease;
+}
+
+.btn:hover {
+  transform: translateY(-3px);
+  box-shadow: 
+    0 8px 20px rgba(251, 191, 36, 0.5),
+    0 15px 40px rgba(251, 191, 36, 0.4);
+}
+
+.btn:hover::before {
+  left: 100%;
+}
+
+.btn:active {
+  transform: translateY(1px);
+}
+
+/* Status */
+.status {
+  font-size: 16px;
+  margin-top: 15px;
+  padding: 10px 15px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.1);
+  display: inline-block;
+}
+
+.status.success { 
+  color: #a7ffb7; 
+  background: rgba(52, 211, 153, 0.15);
+}
+
+.status.error { 
+  color: #ffa7a7; 
+  background: rgba(248, 113, 113, 0.15);
+}
+
+.status.loading { 
+  color: var(--gold); 
+  background: rgba(251, 191, 36, 0.15);
+}
+
+/* Output area */
+.output {
+  margin-top: 35px;
+  text-align: left;
+}
+
+.bubble-output {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 20px;
+  padding: 25px;
+  color: white;
+  font-family: ui-monospace, monospace;
+  white-space: pre-wrap;
+  min-height: 150px;
+  border-left: 5px solid var(--gold);
+  box-shadow: 
+    inset 0 2px 10px rgba(0, 0, 0, 0.2),
+    0 5px 15px rgba(0, 0, 0, 0.1);
+  opacity: 0;
+  transform: translateY(20px);
+  transition: all 0.5s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.bubble-output::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+}
+
+.bubble-output.show {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Typing effect */
+.typing span {
+  color: var(--gold);
+  animation: blink 1s infinite;
+}
+
+@keyframes blink {
+  50% { opacity: 0; }
+}
+
+/* Controls */
+.controls {
+  margin-top: 20px;
+  display: flex;
+  gap: 15px;
+  flex-wrap: wrap;
+}
+
+.controls button {
+  background: linear-gradient(90deg, var(--blue-light), var(--blue-medium));
+  color: white;
+  border: none;
+  padding: 12px 20px;
+  font-size: 16px;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+}
+
+.controls button:hover {
+  background: linear-gradient(90deg, var(--blue-medium), var(--blue-light));
+  transform: translateY(-2px);
+  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.25);
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  header h1 {
+    font-size: 2.5rem;
+  }
+  
+  header p {
+    font-size: 1.1rem;
+  }
+  
+  .card {
+    padding: 25px;
+  }
+  
+  .input-row {
+    flex-direction: column;
+  }
+  
+  .input-container {
+    min-width: 100%;
+  }
+}
+
+/* Animation for the card */
+@keyframes cardAppear {
+  0% {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.card {
+  animation: cardAppear 0.8s ease-out;
+}
+
+/* Decorative elements */
+.decorative-circle {
+  position: absolute;
+  width: 200px;
+  height: 200px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 215, 0, 0.1) 0%, transparent 70%);
+  z-index: -1;
+}
+
+.decorative-circle:nth-child(1) {
+  top: -100px;
+  right: -100px;
+}
+
+.decorative-circle:nth-child(2) {
+  bottom: -50px;
+  left: -50px;
+  width: 300px;
+  height: 300px;
+  background: radial-gradient(circle, rgba(116, 185, 255, 0.1) 0%, transparent 70%);
+}
+
+/* Sparkle effect */
+.sparkle {
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  background: var(--gold-light);
+  border-radius: 50%;
+  box-shadow: 0 0 10px 2px var(--gold-light);
+  animation: sparkle 3s infinite;
+  z-index: 1;
+}
+
+.sparkle:nth-child(1) {
+  top: 20%;
+  left: 15%;
+  animation-delay: 0s;
+}
+
+.sparkle:nth-child(2) {
+  top: 60%;
+  right: 20%;
+  animation-delay: 1s;
+}
+
+.sparkle:nth-child(3) {
+  bottom: 30%;
+  left: 25%;
+  animation-delay: 2s;
+}
+
+@keyframes sparkle {
+  0%, 100% {
+    opacity: 0;
+    transform: scale(0.5);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.2);
+  }
+}
+</style>
+</head>
+<body>
+
+<!-- Background elements -->
+<div class="bubble"></div>
+<div class="bubble"></div>
+<div class="bubble"></div>
+<div class="bubble"></div>
+
+<div class="orb"></div>
+<div class="orb"></div>
+
+<div class="sparkle"></div>
+<div class="sparkle"></div>
+<div class="sparkle"></div>
+
+<header>
+  <h1>✨ LLM Prompt Optimizer</h1>
+  <p>Transform your ideas into perfectly crafted prompts with AI-powered optimization</p>
+</header>
+
+<main>
+  <section class="card">
+    <div class="input-row">
+      <div class="input-container">
+        <label for="apiUrl">API Endpoint</label>
+        <input id="apiUrl" value="http://localhost:8000/prompt" />
+      </div>
+      
+      <div class="input-container">
+        <label for="llm">LLM Model</label>
+        <select id="llm">
+          <option>GPT</option>
+          <option>Claude</option>
+          <option>Gemini</option>
+          <option>DeepSeek</option>
+          <option>LLaMA</option>
+        </select>
+      </div>
+      
+      <div class="input-container">
+        <label for="timeout">Timeout (seconds)</label>
+        <input id="timeout" value="60" />
+      </div>
+    </div>
+
+    <div class="input-container">
+      <label for="request">Your Prompt Request</label>
+      <textarea id="request" placeholder="e.g., Write a funny ad about edible yo-yos"></textarea>
+    </div>
+    
+    <button id="generate" class="btn">
+      <span>🚀 Generate Optimized Prompt</span>
+    </button>
+    
+    <div id="status" class="status">Ready to optimize your prompts</div>
+
+    <div class="output">
+      <div id="preview" class="bubble-output">Your optimized prompt will appear here...</div>
+      <div class="controls">
+        <button id="copyBtn">
+          <span>📋 Copy</span>
+        </button>
+        <button id="downloadBtn">
+          <span>💾 Download</span>
+        </button>
+      </div>
+    </div>
+  </section>
+</main>
+
+<script>
+const apiUrlEl = document.getElementById('apiUrl');
+const llmEl = document.getElementById('llm');
+const requestEl = document.getElementById('request');
+const timeoutEl = document.getElementById('timeout');
+const statusEl = document.getElementById('status');
+const previewEl = document.getElementById('preview');
+const generateBtn = document.getElementById('generate');
+const copyBtn = document.getElementById('copyBtn');
+const downloadBtn = document.getElementById('downloadBtn');
+let lastText = "";
+
+function setStatus(msg, type="") {
+  statusEl.textContent = msg;
+  statusEl.className = "status " + type;
+}
+
+function safeUnescape(s) {
+  try {
+    const parsed = JSON.parse(s);
+    if (typeof parsed === "string") return parsed;
+  } catch {}
+  return s.replace(/\\n/g,"\n");
+}
+
+function typeWriterEffect(text, el) {
+  el.textContent = "";
+  let i = 0;
+  function type() {
+    if (i < text.length) {
+      el.textContent += text.charAt(i);
+      i++;
+      setTimeout(type, 18);
+    } else {
+      el.innerHTML += '<span>|</span>';
+      el.classList.add("typing");
+    }
+  }
+  type();
+}
+
+generateBtn.addEventListener('click', async () => {
+  const apiUrl = apiUrlEl.value.trim();
+  const llm = llmEl.value;
+  const req = requestEl.value.trim();
+  const timeout = Number(timeoutEl.value) || 60;
+
+  if (!req) return setStatus("Please enter a request", "error");
+
+  setStatus("Optimizing your prompt...", "loading");
+  previewEl.classList.remove("show", "typing");
+  previewEl.textContent = "";
+
+  const params = new URLSearchParams({ llm, user_request: req });
+  try {
+    const controller = new AbortController();
+    const to = setTimeout(()=>controller.abort(), timeout*1000);
+    const resp = await fetch(apiUrl+"?"+params, {signal: controller.signal});
+    clearTimeout(to);
+    if (!resp.ok) {
+      const t = await resp.text();
+      setStatus("Error: "+resp.status, "error");
+      previewEl.textContent = t;
+      previewEl.classList.add("show");
+      return;
+    }
+    const raw = await resp.text();
+    lastText = safeUnescape(raw);
+    previewEl.classList.add("show");
+    typeWriterEffect(lastText, previewEl);
+    setStatus("Prompt optimized successfully!", "success");
+  } catch (e) {
+    setStatus("Connection failed: " + e.message, "error");
+    previewEl.textContent = e.message;
+    previewEl.classList.add("show");
+  }
+});
+
+copyBtn.addEventListener('click', async () => {
+  if (!lastText) return;
+  await navigator.clipboard.writeText(lastText);
+  setStatus("Copied to clipboard!", "success");
+  setTimeout(() => {
+    setStatus("Ready for next prompt");
+  }, 2000);
+});
+
+downloadBtn.addEventListener('click', () => {
+  if (!lastText) return;
+  const blob = new Blob([lastText], {type:"text/plain"});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url; a.download="optimized_prompt.txt";
+  document.body.appendChild(a); a.click(); a.remove();
+  URL.revokeObjectURL(url);
+  setStatus("Prompt downloaded!", "success");
+  setTimeout(() => {
+    setStatus("Ready for next prompt");
+  }, 2000);
+});
+</script>
+
+</body>
+</html>
