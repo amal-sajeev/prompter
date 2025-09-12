@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>✨ LLM Prompt Optimizer</title>
+<title>LLM Prompt Optimizer</title>
 
 <!-- Google Font -->
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -523,7 +523,7 @@ textarea {
 <div class="sparkle"></div>
 
 <header>
-    <h1>✨ LLM Prompt Optimizer</h1>
+    <h1>LLM Prompt Optimizer</h1>
     <p>Transform your ideas into perfectly crafted prompts with AI-powered optimization</p>
   </header>
   
@@ -554,7 +554,7 @@ textarea {
       </div>
       
       <button id="generate" class="btn">
-        <span>🚀 Generate Optimized Prompt</span>
+        <span>Generate Optimized Prompt</span>
       </button>
       
       <div id="status" class="status">Ready to optimize your prompts</div>
@@ -563,10 +563,10 @@ textarea {
         <div id="preview" class="bubble-output">Your optimized prompt will appear here...</div>
         <div class="controls">
           <button id="copyBtn">
-            <span>📋 Copy</span>
+            <span>Copy</span>
           </button>
           <button id="downloadBtn">
-            <span>💾 Download</span>
+            <span>Download</span>
           </button>
         </div>
       </div>
@@ -574,7 +574,7 @@ textarea {
   </main>
   
   <script>
-  const apiUrlEl = document.getElementById('apiUrl');
+  const apiUrlEl = "https://stu.globalknowledgetech.com:15001";
   const llmEl = document.getElementById('llm');
   const requestEl = document.getElementById('request');
   const timeoutEl = document.getElementById('timeout');
@@ -614,42 +614,44 @@ textarea {
     type();
   }
   
-  generateBtn.addEventListener('click', async () => {
-    const apiUrl = apiUrlEl.value.trim();
+  const API_BASE = "https://stu.globalknowledgetech.com:15001/prompt";
+
+    generateBtn.addEventListener('click', async () => {
     const llm = llmEl.value.toUpperCase(); // ensure uppercase for API
     const req = requestEl.value.trim();
     const timeout = Number(timeoutEl.value) || 60;
-  
+
     if (!req) return setStatus("Please enter a request", "error");
-  
+
     setStatus("Optimizing your prompt...", "loading");
     previewEl.classList.remove("show", "typing");
     previewEl.textContent = "";
-  
+
     const params = new URLSearchParams({ llm, user_request: req });
     try {
-      const controller = new AbortController();
-      const to = setTimeout(()=>controller.abort(), timeout*1000);
-      const resp = await fetch(apiUrl+"?"+params, {signal: controller.signal});
-      clearTimeout(to);
-      if (!resp.ok) {
+        const controller = new AbortController();
+        const to = setTimeout(()=>controller.abort(), timeout*1000);
+        const resp = await fetch(API_BASE + "?" + params, { signal: controller.signal });
+        clearTimeout(to);
+        if (!resp.ok) {
         const t = await resp.text();
-        setStatus("Error: "+resp.status, "error");
+        setStatus("Error: " + resp.status, "error");
         previewEl.textContent = t;
         previewEl.classList.add("show");
         return;
-      }
-      const raw = await resp.text();
-      lastText = safeUnescape(raw);
-      previewEl.classList.add("show");
-      typeWriterEffect(lastText, previewEl);
-      setStatus("Prompt optimized successfully!", "success");
+        }
+        const raw = await resp.text();
+        lastText = safeUnescape(raw);
+        previewEl.classList.add("show");
+        typeWriterEffect(lastText, previewEl);
+        setStatus("Prompt optimized successfully!", "success");
     } catch (e) {
-      setStatus("Connection failed: " + e.message, "error");
-      previewEl.textContent = e.message;
-      previewEl.classList.add("show");
+        setStatus("Connection failed: " + e.message, "error");
+        previewEl.textContent = e.message;
+        previewEl.classList.add("show");
     }
-  });
+    });
+
   
   copyBtn.addEventListener('click', async () => {
     if (!lastText) return;
