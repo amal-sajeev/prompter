@@ -230,8 +230,19 @@ input:focus, select:focus, textarea:focus {
 
 select {
   appearance: none;
-  background: rgba(0, 0, 0, 0.2) url('data:image/svg+xml,<svg fill="white" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20"><path d="M5 7l5 5 5-5H5z"/></svg>') no-repeat right 16px center;
+  background: linear-gradient(135deg, rgba(255,255,255,0.15), rgba(0,0,0,0.3)) 
+              url('data:image/svg+xml,<svg fill="white" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20"><path d="M5 7l5 5 5-5H5z"/></svg>') 
+              no-repeat right 16px center;
   background-size: 14px;
+  color: var(--white);
+  font-weight: 500;
+  padding-right: 40px;
+  transition: all 0.3s ease;
+}
+
+select option {
+  background: var(--blue-dark);
+  color: var(--white);
 }
 
 textarea {
@@ -512,161 +523,157 @@ textarea {
 <div class="sparkle"></div>
 
 <header>
-  <h1>✨ LLM Prompt Optimizer</h1>
-  <p>Transform your ideas into perfectly crafted prompts with AI-powered optimization</p>
-</header>
-
-<main>
-  <section class="card">
-    <div class="input-row">
+    <h1>✨ LLM Prompt Optimizer</h1>
+    <p>Transform your ideas into perfectly crafted prompts with AI-powered optimization</p>
+  </header>
+  
+  <main>
+    <section class="card">
+      <div class="input-row">        
+        <div class="input-container">
+          <label for="llm">LLM Model</label>
+          <select id="llm">
+            <option value="GPT">GPT</option>
+            <option value="CLAUDE">Claude</option>
+            <option value="GEMINI">Gemini</option>
+            <option value="DEEPSEEK">DeepSeek</option>
+            <option value="GROK">Grok</option>
+            <option value="PERPLEXITY">Perplexity</option>
+          </select>
+        </div>
+        
+        <div class="input-container">
+          <label for="timeout">Timeout (seconds)</label>
+          <input id="timeout" value="60" />
+        </div>
+      </div>
+  
       <div class="input-container">
-        <label for="apiUrl">API Endpoint</label>
-        <input id="apiUrl" value="http://localhost:8000/prompt" />
+        <label for="request">Your Prompt Request</label>
+        <textarea id="request" placeholder="e.g., Write a funny ad about edible yo-yos"></textarea>
       </div>
       
-      <div class="input-container">
-        <label for="llm">LLM Model</label>
-        <select id="llm">
-          <option>GPT</option>
-          <option>Claude</option>
-          <option>Gemini</option>
-          <option>DeepSeek</option>
-          <option>LLaMA</option>
-        </select>
-      </div>
+      <button id="generate" class="btn">
+        <span>🚀 Generate Optimized Prompt</span>
+      </button>
       
-      <div class="input-container">
-        <label for="timeout">Timeout (seconds)</label>
-        <input id="timeout" value="60" />
+      <div id="status" class="status">Ready to optimize your prompts</div>
+  
+      <div class="output">
+        <div id="preview" class="bubble-output">Your optimized prompt will appear here...</div>
+        <div class="controls">
+          <button id="copyBtn">
+            <span>📋 Copy</span>
+          </button>
+          <button id="downloadBtn">
+            <span>💾 Download</span>
+          </button>
+        </div>
       </div>
-    </div>
-
-    <div class="input-container">
-      <label for="request">Your Prompt Request</label>
-      <textarea id="request" placeholder="e.g., Write a funny ad about edible yo-yos"></textarea>
-    </div>
-    
-    <button id="generate" class="btn">
-      <span>🚀 Generate Optimized Prompt</span>
-    </button>
-    
-    <div id="status" class="status">Ready to optimize your prompts</div>
-
-    <div class="output">
-      <div id="preview" class="bubble-output">Your optimized prompt will appear here...</div>
-      <div class="controls">
-        <button id="copyBtn">
-          <span>📋 Copy</span>
-        </button>
-        <button id="downloadBtn">
-          <span>💾 Download</span>
-        </button>
-      </div>
-    </div>
-  </section>
-</main>
-
-<script>
-const apiUrlEl = document.getElementById('apiUrl');
-const llmEl = document.getElementById('llm');
-const requestEl = document.getElementById('request');
-const timeoutEl = document.getElementById('timeout');
-const statusEl = document.getElementById('status');
-const previewEl = document.getElementById('preview');
-const generateBtn = document.getElementById('generate');
-const copyBtn = document.getElementById('copyBtn');
-const downloadBtn = document.getElementById('downloadBtn');
-let lastText = "";
-
-function setStatus(msg, type="") {
-  statusEl.textContent = msg;
-  statusEl.className = "status " + type;
-}
-
-function safeUnescape(s) {
-  try {
-    const parsed = JSON.parse(s);
-    if (typeof parsed === "string") return parsed;
-  } catch {}
-  return s.replace(/\\n/g,"\n");
-}
-
-function typeWriterEffect(text, el) {
-  el.textContent = "";
-  let i = 0;
-  function type() {
-    if (i < text.length) {
-      el.textContent += text.charAt(i);
-      i++;
-      setTimeout(type, 18);
-    } else {
-      el.innerHTML += '<span>|</span>';
-      el.classList.add("typing");
-    }
+    </section>
+  </main>
+  
+  <script>
+  const apiUrlEl = document.getElementById('apiUrl');
+  const llmEl = document.getElementById('llm');
+  const requestEl = document.getElementById('request');
+  const timeoutEl = document.getElementById('timeout');
+  const statusEl = document.getElementById('status');
+  const previewEl = document.getElementById('preview');
+  const generateBtn = document.getElementById('generate');
+  const copyBtn = document.getElementById('copyBtn');
+  const downloadBtn = document.getElementById('downloadBtn');
+  let lastText = "";
+  
+  function setStatus(msg, type="") {
+    statusEl.textContent = msg;
+    statusEl.className = "status " + type;
   }
-  type();
-}
-
-generateBtn.addEventListener('click', async () => {
-  const apiUrl = apiUrlEl.value.trim();
-  const llm = llmEl.value;
-  const req = requestEl.value.trim();
-  const timeout = Number(timeoutEl.value) || 60;
-
-  if (!req) return setStatus("Please enter a request", "error");
-
-  setStatus("Optimizing your prompt...", "loading");
-  previewEl.classList.remove("show", "typing");
-  previewEl.textContent = "";
-
-  const params = new URLSearchParams({ llm, user_request: req });
-  try {
-    const controller = new AbortController();
-    const to = setTimeout(()=>controller.abort(), timeout*1000);
-    const resp = await fetch(apiUrl+"?"+params, {signal: controller.signal});
-    clearTimeout(to);
-    if (!resp.ok) {
-      const t = await resp.text();
-      setStatus("Error: "+resp.status, "error");
-      previewEl.textContent = t;
+  
+  function safeUnescape(s) {
+    try {
+      const parsed = JSON.parse(s);
+      if (typeof parsed === "string") return parsed;
+    } catch {}
+    return s.replace(/\\n/g,"\n");
+  }
+  
+  function typeWriterEffect(text, el) {
+    el.textContent = "";
+    let i = 0;
+    function type() {
+      if (i < text.length) {
+        el.textContent += text.charAt(i);
+        i++;
+        setTimeout(type, 2);
+      } else {
+        el.innerHTML += '<span>|</span>';
+        el.classList.add("typing");
+      }
+    }
+    type();
+  }
+  
+  generateBtn.addEventListener('click', async () => {
+    const apiUrl = apiUrlEl.value.trim();
+    const llm = llmEl.value.toUpperCase(); // ensure uppercase for API
+    const req = requestEl.value.trim();
+    const timeout = Number(timeoutEl.value) || 60;
+  
+    if (!req) return setStatus("Please enter a request", "error");
+  
+    setStatus("Optimizing your prompt...", "loading");
+    previewEl.classList.remove("show", "typing");
+    previewEl.textContent = "";
+  
+    const params = new URLSearchParams({ llm, user_request: req });
+    try {
+      const controller = new AbortController();
+      const to = setTimeout(()=>controller.abort(), timeout*1000);
+      const resp = await fetch(apiUrl+"?"+params, {signal: controller.signal});
+      clearTimeout(to);
+      if (!resp.ok) {
+        const t = await resp.text();
+        setStatus("Error: "+resp.status, "error");
+        previewEl.textContent = t;
+        previewEl.classList.add("show");
+        return;
+      }
+      const raw = await resp.text();
+      lastText = safeUnescape(raw);
       previewEl.classList.add("show");
-      return;
+      typeWriterEffect(lastText, previewEl);
+      setStatus("Prompt optimized successfully!", "success");
+    } catch (e) {
+      setStatus("Connection failed: " + e.message, "error");
+      previewEl.textContent = e.message;
+      previewEl.classList.add("show");
     }
-    const raw = await resp.text();
-    lastText = safeUnescape(raw);
-    previewEl.classList.add("show");
-    typeWriterEffect(lastText, previewEl);
-    setStatus("Prompt optimized successfully!", "success");
-  } catch (e) {
-    setStatus("Connection failed: " + e.message, "error");
-    previewEl.textContent = e.message;
-    previewEl.classList.add("show");
-  }
-});
-
-copyBtn.addEventListener('click', async () => {
-  if (!lastText) return;
-  await navigator.clipboard.writeText(lastText);
-  setStatus("Copied to clipboard!", "success");
-  setTimeout(() => {
-    setStatus("Ready for next prompt");
-  }, 2000);
-});
-
-downloadBtn.addEventListener('click', () => {
-  if (!lastText) return;
-  const blob = new Blob([lastText], {type:"text/plain"});
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url; a.download="optimized_prompt.txt";
-  document.body.appendChild(a); a.click(); a.remove();
-  URL.revokeObjectURL(url);
-  setStatus("Prompt downloaded!", "success");
-  setTimeout(() => {
-    setStatus("Ready for next prompt");
-  }, 2000);
-});
-</script>
-
-</body>
-</html>
+  });
+  
+  copyBtn.addEventListener('click', async () => {
+    if (!lastText) return;
+    await navigator.clipboard.writeText(lastText);
+    setStatus("Copied to clipboard!", "success");
+    setTimeout(() => {
+      setStatus("Ready for next prompt");
+    }, 2000);
+  });
+  
+  downloadBtn.addEventListener('click', () => {
+    if (!lastText) return;
+    const blob = new Blob([lastText], {type:"text/plain"});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url; a.download="optimized_prompt.txt";
+    document.body.appendChild(a); a.click(); a.remove();
+    URL.revokeObjectURL(url);
+    setStatus("Prompt downloaded!", "success");
+    setTimeout(() => {
+      setStatus("Ready for next prompt");
+    }, 2000);
+  });
+  </script>
+  
+  </body>
+  </html>
