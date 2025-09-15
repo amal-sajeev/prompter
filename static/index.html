@@ -271,6 +271,13 @@ textarea {
   transition: all 0.3s ease;
   position: relative;
   overflow: hidden;
+  margin-right: 15px;
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none !important;
 }
 
 .btn::before {
@@ -284,19 +291,34 @@ textarea {
   transition: all 0.6s ease;
 }
 
-.btn:hover {
+.btn:hover:not(:disabled) {
   transform: translateY(-3px);
   box-shadow: 
     0 8px 20px rgba(251, 191, 36, 0.5),
     0 15px 40px rgba(251, 191, 36, 0.4);
 }
 
-.btn:hover::before {
+.btn:hover:not(:disabled)::before {
   left: 100%;
 }
 
-.btn:active {
+.btn:active:not(:disabled) {
   transform: translateY(1px);
+}
+
+/* Update button styling */
+.btn-update {
+  background: linear-gradient(90deg, var(--blue-light), var(--blue-medium));
+  box-shadow: 
+    0 5px 15px rgba(116, 185, 255, 0.4),
+    0 10px 30px rgba(116, 185, 255, 0.3);
+  color: white;
+}
+
+.btn-update:hover:not(:disabled) {
+  box-shadow: 
+    0 8px 20px rgba(116, 185, 255, 0.5),
+    0 15px 40px rgba(116, 185, 255, 0.4);
 }
 
 /* Status */
@@ -328,6 +350,7 @@ textarea {
 .output {
   margin-top: 35px;
   text-align: left;
+  display: none; /* HIDE until something is generated */
 }
 
 .bubble-output {
@@ -348,21 +371,7 @@ textarea {
   position: relative;
   overflow: hidden;
 }
-
-.bubble-output::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
-}
-
-.bubble-output.show {
-  opacity: 1;
-  transform: translateY(0);
-}
+.bubble-output.show { opacity: 1; transform: translateY(0); }
 
 /* Typing effect */
 .typing span {
@@ -403,6 +412,39 @@ textarea {
   box-shadow: 0 6px 15px rgba(0, 0, 0, 0.25);
 }
 
+/* Button container */
+.button-container {
+  display: flex;
+  gap: 15px;
+  flex-wrap: wrap;
+  align-items: center;
+  margin-top: 15px;
+}
+
+/* Update section styling */
+.update-section {
+  margin-top: 25px;
+  padding-top: 25px;
+  border-top: 1px solid rgba(255, 255, 255, 0.2);
+  opacity: 0;
+  transform: translateY(10px);
+  transition: all 0.3s ease;
+  pointer-events: none;
+}
+
+.update-section.show {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: all;
+}
+
+.update-section h3 {
+  color: var(--gold-light);
+  margin-bottom: 15px;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
 /* Responsive design */
 @media (max-width: 768px) {
   header h1 {
@@ -423,6 +465,16 @@ textarea {
   
   .input-container {
     min-width: 100%;
+  }
+  
+  .button-container {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .btn {
+    margin-right: 0;
+    margin-bottom: 10px;
   }
 }
 
@@ -463,6 +515,12 @@ textarea {
   width: 300px;
   height: 300px;
   background: radial-gradient(circle, rgba(116, 185, 255, 0.1) 0%, transparent 70%);
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: rgba(255, 255, 255, 0.5); /* soft white */
+  opacity: 1; /* ensure it doesn’t get faded */
 }
 
 /* Sparkle effect */
@@ -553,23 +611,37 @@ textarea {
         <textarea id="request" placeholder="e.g., Write a funny ad about edible yo-yos"></textarea>
       </div>
       
-      <button id="generate" class="btn">
-        <span>Generate Optimized Prompt</span>
-      </button>
+      <div class="button-container">
+        <button id="generate" class="btn">
+          <span>Generate Optimized Prompt</span>
+        </button>
+      </div>
       
-      <div id="status" class="status">Ready to optimize your prompts</div>
+      <div id="status" class="status">Ready to optimize!</div>
   
       <div class="output">
-        <div id="preview" class="bubble-output">Your optimized prompt will appear here...</div>
+        <div id="preview" class="bubble-output"></div>
         <div class="controls">
-          <button id="copyBtn">
-            <span>Copy</span>
-          </button>
-          <button id="downloadBtn">
-            <span>Download</span>
+          <button id="copyBtn"><span>Copy</span></button>
+          <button id="downloadBtn"><span>Download</span></button>
+        </div>
+      </div>
+      
+      <!-- Update section (initially hidden) -->
+      <div id="updateSection" class="update-section">
+        <h3>Update Your Prompt</h3>
+        <div class="input-container">
+          <label for="updateRequest">Describe what you'd like to change</label>
+          <textarea id="updateRequest" placeholder="e.g., Make it more professional, add technical details, change the tone to be more casual..."></textarea>
+        </div>
+        
+        <div class="button-container">
+          <button id="updatePrompt" class="btn btn-update">
+            <span>Update Prompt</span>
           </button>
         </div>
       </div>
+
     </section>
   </main>
   
@@ -583,7 +655,12 @@ textarea {
   const generateBtn = document.getElementById('generate');
   const copyBtn = document.getElementById('copyBtn');
   const downloadBtn = document.getElementById('downloadBtn');
+  const updateSection = document.getElementById('updateSection');
+  const updateRequestEl = document.getElementById('updateRequest');
+  const updateBtn = document.getElementById('updatePrompt');
+  
   let lastText = "";
+  let currentPrompt = "";
   
   function setStatus(msg, type="") {
     statusEl.textContent = msg;
@@ -609,23 +686,42 @@ textarea {
       } else {
         el.innerHTML += '<span>|</span>';
         el.classList.add("typing");
+        // Show update section after generation completes
+        updateSection.classList.add("show");
       }
     }
     type();
   }
   
+  function showUpdateSection() {
+    updateSection.classList.add("show");
+  }
+  
+  function hideUpdateSection() {
+    updateSection.classList.remove("show");
+    updateRequestEl.value = "";
+  }
+  
   const API_BASE = "https://stu.globalknowledgetech.com:15001/prompt";
+  const UPDATE_API_BASE = "https://stu.globalknowledgetech.com:15001/promptupdate";
 
-    generateBtn.addEventListener('click', async () => {
-    const llm = llmEl.value.toUpperCase(); // ensure uppercase for API
+  generateBtn.addEventListener('click', async () => {
+    const llm = llmEl.value.toUpperCase();
     const req = requestEl.value.trim();
     const timeout = Number(timeoutEl.value) || 60;
 
     if (!req) return setStatus("Please enter a request", "error");
 
+    // Hide update section when generating new prompt
+    hideUpdateSection();
+    
     setStatus("Optimizing your prompt...", "loading");
     previewEl.classList.remove("show", "typing");
     previewEl.textContent = "";
+    
+    // Disable buttons during generation
+    generateBtn.disabled = true;
+    updateBtn.disabled = true;
 
     const params = new URLSearchParams({ llm, user_request: req });
     try {
@@ -642,16 +738,74 @@ textarea {
         }
         const raw = await resp.text();
         lastText = safeUnescape(raw);
+        currentPrompt = lastText;
+        // SHOW the whole output section now
+        previewEl.parentElement.style.display = "block";
         previewEl.classList.add("show");
         typeWriterEffect(lastText, previewEl);
         setStatus("Prompt optimized successfully!", "success");
-    } catch (e) {
+      } catch (e) {
         setStatus("Connection failed: " + e.message, "error");
+        previewEl.parentElement.style.display = "block"; // also show errors properly
         previewEl.textContent = e.message;
         previewEl.classList.add("show");
-    }
+      } finally {
+        generateBtn.disabled = false;
+        updateBtn.disabled = false;
+      }
     });
 
+  updateBtn.addEventListener('click', async () => {
+    const llm = llmEl.value.toUpperCase();
+    const updateReq = updateRequestEl.value.trim();
+    const timeout = Number(timeoutEl.value) || 60;
+
+    if (!updateReq) return setStatus("Please enter what you'd like to change", "error");
+    if (!currentPrompt) return setStatus("Please generate a prompt first", "error");
+
+    setStatus("Updating your prompt...", "loading");
+    previewEl.classList.remove("show", "typing");
+    previewEl.textContent = "";
+    
+    // Disable buttons during update
+    generateBtn.disabled = true;
+    updateBtn.disabled = true;
+
+    const params = new URLSearchParams({ 
+      llm, 
+      prompt: currentPrompt,
+      user_request: updateReq 
+    });
+    
+    try {
+        const controller = new AbortController();
+        const to = setTimeout(()=>controller.abort(), timeout*1000);
+        const resp = await fetch(UPDATE_API_BASE + "?" + params, { signal: controller.signal });
+        clearTimeout(to);
+        if (!resp.ok) {
+        const t = await resp.text();
+        setStatus("Error: " + resp.status, "error");
+        previewEl.textContent = t;
+        previewEl.classList.add("show");
+        return;
+        }
+        const raw = await resp.text();
+        lastText = safeUnescape(raw);
+        currentPrompt = lastText;
+        previewEl.parentElement.style.display = "block";
+        previewEl.classList.add("show");
+        typeWriterEffect(lastText, previewEl);
+        setStatus("Prompt updated successfully!", "success");
+      } catch (e) {
+        setStatus("Update failed: " + e.message, "error");
+        previewEl.parentElement.style.display = "block";
+        previewEl.textContent = e.message;
+        previewEl.classList.add("show");
+      } finally {
+        generateBtn.disabled = false;
+        updateBtn.disabled = false;
+      }
+    });
   
   copyBtn.addEventListener('click', async () => {
     if (!lastText) return;
@@ -674,6 +828,22 @@ textarea {
     setTimeout(() => {
       setStatus("Ready for next prompt");
     }, 2000);
+  });
+  
+  // Clear update section when LLM model changes
+  llmEl.addEventListener('change', () => {
+    hideUpdateSection();
+    currentPrompt = "";
+    lastText = "";
+  });
+  
+  // Clear everything when request changes significantly
+  requestEl.addEventListener('input', () => {
+    if (currentPrompt && requestEl.value.trim() === "") {
+      hideUpdateSection();
+      currentPrompt = "";
+      lastText = "";
+    }
   });
   </script>
   

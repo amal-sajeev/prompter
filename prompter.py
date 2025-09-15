@@ -28,7 +28,7 @@ def create_prompt(llm: str, user_request:str):
     try:
         if llm in PROMPTING_GUIDES.keys():
             completion = client.chat.completions.create(
-                model="gpt-4o",
+                model="gpt-5-mini",
                 messages=[
                     {"role": "developer", "content": f"""
             You are a prompt generator specialized in creating optimized prompts for {llm}.  
@@ -98,7 +98,101 @@ def create_prompt(llm: str, user_request:str):
             print(completion.choices[0].message.content)
             return(completion.choices[0].message.content.replace("```",""))
         else:
+            raise(HTTPException(500,"Model not supported!"))
+    except Exception as e:
+        print(f"ERROR on {datetime.now().strftime('%Y_%m_%d')} : {e}")
+        return(f"ERROR: {str(e)}") 
+
+
+@app.get("/promptupdate")
+def promptupdate(llm:str, prompt:str, user_request:str ):
+    try:
+        if llm in PROMPTING_GUIDES.keys():
+            completion = client.chat.completions.create(
+                model="gpt-5-mini",
+                messages=[
+                    {
+                        "role": "developer",
+                        "content": f"""
+                            You are a prompt updater specialized in updating and optimized prompts for {llm} based on the user's request.   
+                            You will be given:
+                            1. A comprehensive prompting best practices guide for {llm} under the variable PROMPTING_GUIDE
+                            2. A user request that needs to be transformed into an optimized prompt.
+                            3. A prompt that needs to be adjusted according to the user's instructions.
+
+                            Your task is to analyze the user request and the old prompt, to create a high-quality, optimized prompt by applying the specific techniques, templates, and best practices from the PROMPTING_GUIDE that properly integrates the user's request.
+
+                            Here is the PROMPTING_GUIDE for {llm}:
+
+                            {PROMPTING_GUIDES[llm]}
+
+                            ### Instructions:
+
+                            1. **Analyze the User Request:**
+                            - Identify the task type (analytical, creative, problem-solving, research, technical, coding, etc.)
+                            - Determine the complexity level and scope
+                            - Note any specific requirements or constraints mentioned
+                            
+                            2. **Analyze the Existing Prompt:**
+                            - Understand what the original prompt is trying to do.
+                            - Compare it with the User's request to see what the issues are and what needs to be changed.
+                            - Plan what changes to make, change the structure of the prompt as need to accomodate the user's request. 
+
+                            3. **Select Appropriate Techniques from PROMPTING_GUIDE:**
+                            - Choose the most relevant task-specific template from the guide
+                            - Apply model-specific optimizations for {llm}
+                            - Incorporate advanced techniques if the task complexity warrants it
+
+                            4. **Structure the Optimized Prompt:**
+                            - Use the recommended formatting style for {llm}
+                            - Include context and motivation as specified in the guide
+                            - Add examples if the task would benefit from multi-shot prompting
+                            - Apply the core principles (clarity, explicitness, positive framing, etc.)
+
+                            5. **Quality Assurance:**
+                            - Ensure the prompt follows the quality checklist from the guide
+                            - Verify no conflicting instructions exist
+                            - Ensure all changes that the user's request asked for are accounted for in the new prompt.
+                            - Confirm all requirements are clearly specified
+
+                            6. **Output Requirements:**
+                            - Return only the final optimized prompt
+                            - The prompt should be ready to paste directly into the {llm} chat interface
+                            - Follow the exact formatting recommendations for {llm} models
+
+                            ### Key Reminders:
+                            - Apply {llm}-specific best practices (e.g., XML formatting for Claude 4, positive instruction framing)
+                            - Include sufficient context and motivation for better results
+                            - Be explicit about desired output format and style
+                            - Use appropriate templates and techniques based on task complexity
+                            - Make sure the new prompt correctly understands and achieves what the user wants.
+                            ---
+
+                            ### Variables available:
+                            - PROMPTING_GUIDE → Comprehensive best practices document for {llm}
+                            - llm → the target LLM family (e.g., Claude, GPT, Gemini)
+                            - User Request → a free-form natural language instruction from the user
+
+                            ---
+
+                            ### Output:
+                            Produce a single, highly optimized prompt that applies the best practices from PROMPTING_GUIDE, accounts for the user's request, and is ready to be sent directly to {llm}. DO NOT ADD any notes, commentary, or anything else, ONLY RETURN THE PROMPT.
+                            """
+                    },
+                    {
+                        "role": "assistant",
+                        "content": prompt
+                    },
+                    {
+                        "role": "user",
+                        "content": user_request
+                    }
+                ]
+            )
+            print(completion.choices[0].message.content)
+            return(completion.choices[0].message.content.replace("```",""))
+        else:
             raise(HTTPException(500, "Model not supported!"))
     except Exception as e:
         print(f"ERROR on {datetime.now().strftime('%Y_%m_%d')} : {e}")
-        return(f"ERROR: {str(e)}")
+        return(f"ERROR: {str(e)}") 
