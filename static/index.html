@@ -245,6 +245,8 @@ select option {
   color: var(--white);
 }
 
+
+
 textarea {
   width: 100%;
   min-height: 150px;
@@ -445,6 +447,20 @@ textarea {
   font-weight: 600;
 }
 
+/* Language selector special styling */
+#language {
+  background: linear-gradient(135deg, rgba(255,255,255,0.15), rgba(0,0,0,0.3)) 
+              url('data:image/svg+xml,<svg fill="white" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20"><path d="M5 7l5 5 5-5H5z"/></svg>') 
+              no-repeat right 16px center;
+  background-size: 14px;
+}
+
+/* Language selector icon enhancement */
+.language-selector {
+  position: relative;
+}
+
+
 /* Responsive design */
 @media (max-width: 768px) {
   header h1 {
@@ -520,7 +536,7 @@ textarea {
 input::placeholder,
 textarea::placeholder {
   color: rgba(255, 255, 255, 0.5); /* soft white */
-  opacity: 1; /* ensure it doesn’t get faded */
+  opacity: 1; /* ensure it doesn't get faded */
 }
 
 /* Sparkle effect */
@@ -600,9 +616,21 @@ textarea::placeholder {
           </select>
         </div>
         
-        <div class="input-container">
-          <label for="timeout">Timeout (seconds)</label>
-          <input id="timeout" value="60" />
+        <div class="input-container language-selector">
+          <label for="language">Response Language</label>
+          <select id="language">
+            <option value="English">English</option>
+            <option value="Bengali">বাংলা (Bengali)</option>
+            <option value="Gujarati">ગુજરાતી (Gujarati)</option>
+            <option value="Hindi">हिन्दी (Hindi)</option>
+            <option value="Kannada">ಕನ್ನಡ (Kannada)</option>
+            <option value="Malayalam">മലയാളം (Malayalam)</option>
+            <option value="Marathi">मराठी (Marathi)</option>
+            <option value="Oriya">ଓଡ଼ିଆ (Oriya)</option>
+            <option value="Punjabi">ਪੰਜਾਬੀ (Punjabi)</option>
+            <option value="Tamil">தமிழ் (Tamil)</option>
+            <option value="Telugu">తెలుగు (Telugu)</option>
+          </select>
         </div>
       </div>
   
@@ -648,8 +676,8 @@ textarea::placeholder {
   <script>
   const apiUrlEl = "https://stu.globalknowledgetech.com:15001";
   const llmEl = document.getElementById('llm');
+  const languageEl = document.getElementById('language');
   const requestEl = document.getElementById('request');
-  const timeoutEl = document.getElementById('timeout');
   const statusEl = document.getElementById('status');
   const previewEl = document.getElementById('preview');
   const generateBtn = document.getElementById('generate');
@@ -707,8 +735,8 @@ textarea::placeholder {
 
   generateBtn.addEventListener('click', async () => {
     const llm = llmEl.value.toUpperCase();
+    const language = languageEl.value;
     const req = requestEl.value.trim();
-    const timeout = Number(timeoutEl.value) || 60;
 
     if (!req) return setStatus("Please enter a request", "error");
 
@@ -723,12 +751,12 @@ textarea::placeholder {
     generateBtn.disabled = true;
     updateBtn.disabled = true;
 
-    const params = new URLSearchParams({ llm, user_request: req });
+    const params = new URLSearchParams({ llm, user_request: req, language });
     try {
         const controller = new AbortController();
-        const to = setTimeout(()=>controller.abort(), timeout*1000);
+        const timeout = setTimeout(() => controller.abort(), 60000); // 60 second timeout
         const resp = await fetch(API_BASE + "?" + params, { signal: controller.signal });
-        clearTimeout(to);
+        clearTimeout(timeout);
         if (!resp.ok) {
         const t = await resp.text();
         setStatus("Error: " + resp.status, "error");
@@ -743,7 +771,7 @@ textarea::placeholder {
         previewEl.parentElement.style.display = "block";
         previewEl.classList.add("show");
         typeWriterEffect(lastText, previewEl);
-        setStatus("Prompt optimized successfully!", "success");
+        setStatus(`Prompt optimized successfully! (Output language: ${language})`, "success");
       } catch (e) {
         setStatus("Connection failed: " + e.message, "error");
         previewEl.parentElement.style.display = "block"; // also show errors properly
@@ -757,8 +785,8 @@ textarea::placeholder {
 
   updateBtn.addEventListener('click', async () => {
     const llm = llmEl.value.toUpperCase();
+    const language = languageEl.value;
     const updateReq = updateRequestEl.value.trim();
-    const timeout = Number(timeoutEl.value) || 60;
 
     if (!updateReq) return setStatus("Please enter what you'd like to change", "error");
     if (!currentPrompt) return setStatus("Please generate a prompt first", "error");
@@ -774,14 +802,15 @@ textarea::placeholder {
     const params = new URLSearchParams({ 
       llm, 
       prompt: currentPrompt,
-      user_request: updateReq 
+      user_request: updateReq,
+      language
     });
     
     try {
         const controller = new AbortController();
-        const to = setTimeout(()=>controller.abort(), timeout*1000);
+        const timeout = setTimeout(() => controller.abort(), 60000); // 60 second timeout
         const resp = await fetch(UPDATE_API_BASE + "?" + params, { signal: controller.signal });
-        clearTimeout(to);
+        clearTimeout(timeout);
         if (!resp.ok) {
         const t = await resp.text();
         setStatus("Error: " + resp.status, "error");
@@ -795,7 +824,7 @@ textarea::placeholder {
         previewEl.parentElement.style.display = "block";
         previewEl.classList.add("show");
         typeWriterEffect(lastText, previewEl);
-        setStatus("Prompt updated successfully!", "success");
+        setStatus(`Prompt updated successfully! (Output language: ${language})`, "success");
       } catch (e) {
         setStatus("Update failed: " + e.message, "error");
         previewEl.parentElement.style.display = "block";
@@ -830,8 +859,14 @@ textarea::placeholder {
     }, 2000);
   });
   
-  // Clear update section when LLM model changes
+  // Clear update section when LLM model or language changes
   llmEl.addEventListener('change', () => {
+    hideUpdateSection();
+    currentPrompt = "";
+    lastText = "";
+  });
+  
+  languageEl.addEventListener('change', () => {
     hideUpdateSection();
     currentPrompt = "";
     lastText = "";
